@@ -20,11 +20,15 @@ body {
   padding: 2rem;
 }
 
-.nav {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+.header-controls {
   display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
@@ -144,11 +148,13 @@ body {
 
 .table-box {
   background: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
+  overflow: hidden;
+  margin-top: 2rem;
 }
 
 .url-table {
@@ -158,14 +164,38 @@ body {
 
 .url-table th,
 .url-table td {
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   text-align: left;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
 }
 
 .url-table th {
   font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   background-color: #f8f9fa;
+  color: #495057;
+}
+
+.url-table tbody tr:nth-of-type(even) {
+  background-color: #fcfcfc;
+}
+
+.url-table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.url-table a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.url-table a:hover {
+  text-decoration: underline;
 }
 
 .toggle-auth-btn {
@@ -186,6 +216,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
+  z-index: 10;
 }
 
 .logo-container {
@@ -230,10 +261,35 @@ body.dark-mode {
   color: #e0e0e0;
 }
 
-body.dark-mode .form-box,
-body.dark-mode .table-box {
+body.dark-mode .form-box {
   background-color: #1e1e1e;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .table-box {
+  background-color: #1e1e1e;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+body.dark-mode .url-table th {
+  background-color: #2c2c2c;
+  color: #adb5bd;
+}
+
+body.dark-mode .url-table td {
+  border-color: #3a3a3a;
+}
+
+body.dark-mode .url-table tbody tr:nth-of-type(even) {
+  background-color: #2c2c2c;
+}
+
+body.dark-mode .url-table tbody tr:hover {
+  background-color: #3a3a3a;
+}
+
+body.dark-mode .url-table a {
+  color: #64b5f6;
 }
 
 body.dark-mode .title,
@@ -256,14 +312,6 @@ body.dark-mode .nav-link,
 body.dark-mode .short-url,
 body.dark-mode .toggle-auth-btn {
   color: #64b5f6;
-}
-
-body.dark-mode .url-table th {
-  background-color: #2c2c2c;
-}
-
-body.dark-mode .url-table td {
-  border-color: #333;
 }
 
 .toggle-auth-btn:hover {

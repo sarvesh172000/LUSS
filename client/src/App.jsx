@@ -17,7 +17,7 @@ const Home = ({ token, user, onLogout }) => {
     setError('');
     setShortUrl('');
     try {
-      const res = await fetch('http://localhost:5000/shorten', {
+      const res = await fetch('http://localhost:5001/shorten', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +88,7 @@ const MyUrls = ({ token }) => {
     async function fetchUrls() {
       setLoading(true);
       try {
-        const res = await fetch('http://localhost:5000/my-urls', {
+        const res = await fetch('http://localhost:5001/my-urls', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
