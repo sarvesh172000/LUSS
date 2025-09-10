@@ -12,15 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB Atlas
@@ -31,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   console.log('Successfully connected to MongoDB Atlas!');
 }).catch((err) => {
   console.error('Error connecting to MongoDB Atlas:', err);
-  process.exit(1); // Exit the process with an error code
+  process.exit(1);
 });
 
 // Auth middleware
@@ -68,40 +60,153 @@ app.post('/login', async (req, res) => {
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(400).json({ error: 'Invalid credentials' });
   const token = jwt.sign({ username: user.username, email: user.email }, JWT_SECRET, { expiresIn: '1d' });
-  res.json({ token, username: user.username, email: user.email });
+  res.json({ token, user: {
+    username: user.username,
+    email: user.email,
+    age: user.age,
+    mobile: user.mobile,
+    sex: user.sex
+  }});
 });
 
-// Shorten URL (auth required)
+// --- All route and middleware code follows this ---
+
+// Update profile (username, age, mobile, sex)
+app.put('/profile', auth, async (req, res) => {
+  const { username, age, mobile, sex } = req.body;
+  try {
+    const user = await User.findOneAndUpdate(
+      { email: req.user.email },
+      { $set: { username, age, mobile, sex } },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: {
+      username: user.username,
+      age: user.age,
+      mobile: user.mobile,
+      sex: user.sex,
+      email: user.email
+    }});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Change password and return updated user info
+app.post('/change-password', auth, async (req, res) => {
+  const { password, newPassword } = req.body;
+  if (!password || !newPassword) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ error: 'Current password is incorrect' });
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    // Return updated user info (excluding password)
+    res.json({
+      message: 'Password changed',
+      user: {
+        username: user.username,
+        age: user.age,
+        mobile: user.mobile,
+        sex: user.sex,
+        email: user.email
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+// Shorten URL
 app.post('/shorten', auth, async (req, res) => {
   const { longUrl } = req.body;
-  if (!longUrl || !/^https?:\/\//.test(longUrl)) {
-    return res.status(400).json({ error: 'Invalid URL' });
+  if (!longUrl) return res.status(400).json({ error: 'No URL provided' });
+  try {
+    const shortId = nanoid(7);
+    const newUrl = await Url.create({
+      longUrl,
+      shortId,
+      user: {
+        username: req.user.username,
+        email: req.user.email,
+      },
+    });
+    res.json(newUrl);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to shorten URL' });
   }
-  const shortId = nanoid(7);
-  await Url.create({
-    shortId,
-    longUrl,
-    user: { username: req.user.username, email: req.user.email },
-  });
-  res.json({ shortUrl: `${req.protocol}://${req.get('host')}/${shortId}` });
 });
 
-// Get user's URLs (auth required)
+// Get user's URLs
 app.get('/my-urls', auth, async (req, res) => {
-  const urls = await Url.find({ 'user.email': req.user.email }).sort({ createdAt: -1 });
-  res.json(urls);
+  try {
+    const urls = await Url.find({ 'user.email': req.user.email });
+    res.json(urls);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch URLs' });
+  }
 });
 
-// Redirect endpoint
-app.get('/:shortId', async (req, res) => {
-  const { shortId } = req.params;
-  const urlDoc = await Url.findOne({ shortId });
-  if (urlDoc) {
-    return res.redirect(urlDoc.longUrl);
+// Delete one or more URLs or all history (auth required)
+app.delete('/my-urls', auth, async (req, res) => {
+  if (req.body.ids === 'ALL') {
+    try {
+      const result = await Url.deleteMany({ 'user.email': req.user.email });
+      return res.json({ deletedCount: result.deletedCount });
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to delete all URLs' });
+    }
   }
-  res.status(404).send('URL not found');
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'No IDs provided' });
+  }
+  try {
+    // Only delete URLs belonging to the user
+    const result = await Url.deleteMany({
+      _id: { $in: ids },
+      'user.email': req.user.email,
+    });
+    res.json({ deletedCount: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete URLs' });
+  }
+});
+
+// Fetch user data
+app.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.user.email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({
+      username: user.username,
+      email: user.email,
+      age: user.age,
+      mobile: user.mobile,
+      sex: user.sex,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Redirect short URL
+app.get('/:shortId', async (req, res) => {
+  try {
+    const url = await Url.findOne({ shortId: req.params.shortId });
+    if (url) {
+      return res.redirect(url.longUrl);
+    } else {
+      return res.status(404).json('No url found');
+    }
+  } catch (err) {
+    res.status(500).json('Server error');
+  }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
