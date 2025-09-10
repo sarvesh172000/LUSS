@@ -15,7 +15,7 @@ const MyUrls = ({ token }) => {
     async function fetchUrls() {
       setLoading(true);
       try {
-        const res = await fetch('http://localhost:5001/my-urls', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/my-urls`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -56,7 +56,7 @@ const MyUrls = ({ token }) => {
     setDeleting(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5001/my-urls', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/my-urls`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const MyUrls = ({ token }) => {
   };
 
   const handleCopy = (shortId) => {
-    navigator.clipboard.writeText(`http://localhost:5001/${shortId}`);
+    navigator.clipboard.writeText(`${import.meta.env.VITE_API_URL}/${shortId}`);
     // Optional: show a "Copied!" message
   };
 
@@ -141,12 +141,12 @@ const MyUrls = ({ token }) => {
                   )}
                   <td>
                     <a
-                      href={`http://localhost:5001/${url.shortId}`}
+                      href={`${import.meta.env.VITE_API_URL}/${url.shortId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="short-url"
                     >
-                      {`http://localhost:5001/${url.shortId}`}
+                      {`${import.meta.env.VITE_API_URL}/${url.shortId}`}
                     </a>
                   </td>
                   <td className="original-url-cell">{url.longUrl}</td>

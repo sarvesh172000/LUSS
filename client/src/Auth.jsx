@@ -25,7 +25,7 @@ const Auth = ({ onLogin }) => {
     setLoading(true);
     setError('');
 
-    const url = isLogin ? 'http://localhost:5001/login' : 'http://localhost:5001/register';
+    const url = isLogin ? `${import.meta.env.VITE_API_URL}/login` : `${import.meta.env.VITE_API_URL}/register`;
     const body = isLogin ? { email, password } : { username, email, password };
 
     try {

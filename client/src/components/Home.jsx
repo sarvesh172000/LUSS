@@ -13,7 +13,7 @@ const Home = ({ token }) => {
     setError('');
     setShortUrl('');
     try {
-      const res = await fetch('http://localhost:5001/shorten', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/shorten`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ const Home = ({ token }) => {
       });
       const data = await res.json();
       if (res.ok) {
-        setShortUrl(`http://localhost:5001/${data.shortId}`);
+        setShortUrl(`${import.meta.env.VITE_API_URL}/${data.shortId}`);
       } else {
         setError(data.error || 'Something went wrong');
       }

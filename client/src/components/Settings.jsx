@@ -26,7 +26,7 @@ const Settings = ({ user, token, onProfileUpdate, onHistoryDelete }) => {
     setErr('');
     // TODO: Call backend to update profile (username, age, mobile, sex)
     try {
-      const res = await fetch('http://localhost:5001/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ const Settings = ({ user, token, onProfileUpdate, onHistoryDelete }) => {
     }
     // TODO: Call backend to change password
     try {
-      const res = await fetch('http://localhost:5001/change-password', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const Settings = ({ user, token, onProfileUpdate, onHistoryDelete }) => {
     setErr('');
     // TODO: Call backend to delete all URLs
     try {
-      const res = await fetch('http://localhost:5001/my-urls', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/my-urls`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
